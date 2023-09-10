@@ -9,6 +9,7 @@ import {
   DefaultValuePipe,
   Body,
   ValidationPipe,
+  Delete,
 } from '@nestjs/common';
 
 import { User } from '@prisma/client';
@@ -21,33 +22,42 @@ export class UsersController {
   constructor(private readonly usersServices: UsersService) {}
 
   @Get()
-  async getUsers(
+  getUsers(
     @Query('take', new DefaultValuePipe(100), ParseIntPipe) take: number,
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
   ): Promise<User[]> {
-    return await this.usersServices.findMany({ take, skip });
+    return this.usersServices.findMany({ take, skip });
   }
 
   @Get(':id')
-  async getUser(@Param('id', ParseIntPipe) id: number): Promise<null | User> {
-    return await this.usersServices.findOne(id);
+  getUser(@Param('id', ParseIntPipe) id: number): Promise<null | User> {
+    return this.usersServices.findOne(id);
   }
 
   @Post()
-  async createUser(
+  createUser(
     @Body(new ValidationPipe({ whitelist: true })) payload: UserCreateDto,
   ): Promise<User> {
-    return await this.usersServices.create(payload);
+    // Future work: validate the email is unique or return a 409
+    // Note: email isn't marked as unique in the Prisma schema for simplicity purposes
+    return this.usersServices.create(payload);
   }
 
   @Patch(':id')
-  async updateUser(
+  updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body(
       new ValidationPipe({ whitelist: true, skipUndefinedProperties: true }),
     )
     payload: UserUpdateDto,
   ): Promise<User> {
-    return await this.usersServices.update(id, payload);
+    // Future work: validate the user exists or return a 404
+    return this.usersServices.update(id, payload);
+  }
+
+  @Delete(':id')
+  deleteUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    // Future work: validate the user exists or return a 404
+    return this.usersServices.delete(id);
   }
 }
